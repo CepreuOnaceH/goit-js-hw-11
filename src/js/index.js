@@ -8,6 +8,7 @@ const gallery = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
 let currentPage = 1;
 let searchQuery = '';
+let isFetching = false;
 
 const IMAGES_PER_PAGE = 40;
 
@@ -33,6 +34,7 @@ async function loadMoreImages() {
 
   loadMoreBtn.disabled = false;
   loadMoreBtn.textContent = 'Load more';
+  isFetching = false;
 }
 
 form.addEventListener('submit', async event => {
@@ -66,7 +68,8 @@ loadMoreBtn.addEventListener('click', loadMoreImages);
 
 window.addEventListener('scroll', async () => {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  if (scrollTop + clientHeight >= scrollHeight - 100) {
+  if (!isFetching && scrollTop + clientHeight >= scrollHeight - 100) {
+    isFetching = true;
     const images = await searchImages(
       searchQuery,
       currentPage + 1,
@@ -78,6 +81,7 @@ window.addEventListener('scroll', async () => {
       loadMoreBtn.style.visibility = 'hidden';
       Notiflix.Notify.info("You've reached the end of the search results.");
     }
+    isFetching = false;
   } else {
     loadMoreBtn.style.visibility = 'hidden';
   }
