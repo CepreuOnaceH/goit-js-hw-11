@@ -6,11 +6,9 @@ import { renderImageCards } from './render.js';
 const form = document.getElementById('search-form');
 const gallery = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
+const IMAGES_PER_PAGE = 40;
 let currentPage = 1;
 let searchQuery = '';
-let isFetching = false;
-
-const IMAGES_PER_PAGE = 40;
 
 async function loadMoreImages() {
   loadMoreBtn.disabled = true;
@@ -25,16 +23,20 @@ async function loadMoreImages() {
     renderImageCards(images);
     currentPage++;
     refreshLightbox();
+    if (images.length >= IMAGES_PER_PAGE) {
+      loadMoreBtn.style.display = 'block';
+    } else {
+      loadMoreBtn.style.display = 'none';
+    }
   } else {
+    loadMoreBtn.style.display = 'none';
     Notiflix.Notify.info(
       "We're sorry, but you've reached the end of search results."
     );
-    loadMoreBtn.style.display = 'none';
   }
 
   loadMoreBtn.disabled = false;
   loadMoreBtn.textContent = 'Load more';
-  isFetching = false;
 }
 
 form.addEventListener('submit', async event => {
@@ -48,6 +50,7 @@ form.addEventListener('submit', async event => {
     Notiflix.Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
     );
+    loadMoreBtn.style.display = 'none';
     return;
   }
 
@@ -59,30 +62,7 @@ form.addEventListener('submit', async event => {
   } else {
     loadMoreBtn.style.display = 'none';
   }
-
-  loadMoreBtn.style.visibility = 'hidden';
   refreshLightbox();
 });
 
 loadMoreBtn.addEventListener('click', loadMoreImages);
-
-window.addEventListener('scroll', async () => {
-  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  if (!isFetching && scrollTop + clientHeight >= scrollHeight - 100) {
-    isFetching = true;
-    const images = await searchImages(
-      searchQuery,
-      currentPage + 1,
-      IMAGES_PER_PAGE
-    );
-    if (images.length > 0) {
-      loadMoreBtn.style.visibility = 'visible';
-    } else {
-      loadMoreBtn.style.visibility = 'hidden';
-      Notiflix.Notify.info("You've reached the end of the search results.");
-    }
-    isFetching = false;
-  } else {
-    loadMoreBtn.style.visibility = 'hidden';
-  }
-});
